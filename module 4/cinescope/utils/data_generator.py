@@ -17,6 +17,13 @@ class DataGenerator:
     def generate_random_name():
         return f"{faker.first_name()} {faker.last_name()}"
 
+    @staticmethod
+    def generate_movie_description():
+        return f"{faker.text(150)}"
+
+    @staticmethod
+    def generate_movie_name():
+        return f"{' '.join(faker.words(2))}"
 
     @staticmethod
     def generate_random_password():

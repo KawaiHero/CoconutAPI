@@ -4,8 +4,6 @@ import pytest
 import requests
 
 from cinescope.api.api_manager import ApiManager
-from cinescope.custom_requester.custom_requester import CustomRequester
-from constants import REGISTER_ENDPOINT, BASE_URL
 from utils.data_generator import DataGenerator
 
 faker = Faker()
@@ -45,11 +43,18 @@ def registered_user(api_manager: ApiManager, test_user):
     registered_user["id"] = response_data["id"]
     return registered_user
 
-'''@pytest.fixture(scope="session")
-def requester():
-    """
-    Фикстура для создания экземпляра CustomRequester.
-    """
-    session = requests.Session()
-    return CustomRequester(session=session, base_url=BASE_URL)'''
+@pytest.fixture(scope="session")
+def test_movie():
+
+    random_name = DataGenerator.generate_movie_name()
+    random_description = DataGenerator.generate_movie_description()
+    return {
+        "name": random_name,
+        "imageUrl": "https://image.url",
+        "price": 100,
+        "description": random_description,
+        "location": "SPB",
+        "published": True,
+        "genreId": 1
+}
 
