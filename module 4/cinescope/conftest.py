@@ -58,3 +58,16 @@ def test_movie():
         "genreId": 1
 }
 
+@pytest.fixture(scope="session")
+def wrong_movie():
+    random_name = DataGenerator.generate_movie_name()
+    random_description = DataGenerator.generate_movie_description()
+    return {
+        "name": f"Wrong {random_name}",
+        "description": f"Wrong {random_description} ",
+        "price": 100,
+        "location": "SPB",
+        "imageUrl": "https://image.url",
+        "published": True,
+        "genreId": 1
+}

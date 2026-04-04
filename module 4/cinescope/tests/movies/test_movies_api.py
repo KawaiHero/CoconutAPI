@@ -53,18 +53,9 @@ class TestMovieAPI:
         del_response = api_manager.movie_api.delete_movie(movie_id)
         assert response.json()["name"] == del_response.json()["name"], "name не совпадает"
 
-    def test_patch_movie(self, api_manager: ApiManager, test_movie):
-        wrong_movie_data = {
-            "name": "Movie naaame",
-            "description": "Movie description",
-            "price": 100,
-            "location": "SPB",
-            "imageUrl": "https://image.url",
-            "published": True,
-            "genreId": 1
-}
+    def test_patch_movie(self, api_manager: ApiManager, wrong_movie, test_movie):
         api_manager.auth_api.authenticate(admin_creds)
-        response = api_manager.movie_api.post_movie(wrong_movie_data)
+        response = api_manager.movie_api.post_movie(wrong_movie)
         response_data = response.json()
         movie_id = response.json()["id"]
 
