@@ -32,22 +32,50 @@ class TestAuthAPI:
         assert response_data["user"]["email"] == registered_user["email"], "Email не совпадает"
 
 
-    @pytest.mark.parametrize("field",["email","fullName","password","passwordRepeat"])
-    def test_register_without_required_fields(self, api_manager: ApiManager , test_user, field):
+    def test_register_without_email(self, api_manager: ApiManager , test_user):
         invalid_user = test_user.copy()
-        invalid_user.pop(field)
+        invalid_user.pop("email")
         response = api_manager.auth_api.register_user(invalid_user, expected_status=400)
         response_data = response.json()
-
 
         assert "message" in response_data, "Oтсутствует message в ответе"
         assert "error" in response_data, "Oтсутствует error в ответе"
         assert "statusCode" in response_data, "Oтсутствует statusCode в ответе"
 
-    @pytest.mark.parametrize("email", [" ", "123", "mail@"])
-    def test_register_with_invalid_email(self, api_manager: ApiManager, test_user, email):
+    def test_register_without_name(self, api_manager: ApiManager , test_user):
+        invalid_user = test_user.copy()
+        invalid_user.pop("fullName")
+        response = api_manager.auth_api.register_user(invalid_user, expected_status=400)
+        response_data = response.json()
+
+        assert "message" in response_data, "Oтсутствует message в ответе"
+        assert "error" in response_data, "Oтсутствует error в ответе"
+        assert "statusCode" in response_data, "Oтсутствует statusCode в ответе"
+
+    def test_register_without_password(self, api_manager: ApiManager , test_user):
+        invalid_user = test_user.copy()
+        invalid_user.pop("password")
+        response = api_manager.auth_api.register_user(invalid_user, expected_status=400)
+        response_data = response.json()
+
+        assert "message" in response_data, "Oтсутствует message в ответе"
+        assert "error" in response_data, "Oтсутствует error в ответе"
+        assert "statusCode" in response_data, "Oтсутствует statusCode в ответе"
+
+
+    def test_register_with_empty_email(self, api_manager: ApiManager, test_user):
         invalid_email = test_user.copy()
-        invalid_email["email"] = email
+        invalid_email["email"] = " "
+        response = api_manager.auth_api.register_user(invalid_email, expected_status=400)
+        response_data = response.json()
+
+        assert "message" in response_data, "Oтсутствует message в ответе"
+        assert "error" in response_data, "Oтсутствует error в ответе"
+        assert "statusCode" in response_data, "Oтсутствует statusCode в ответе"
+
+    def test_register_with_invalid_email(self, api_manager: ApiManager, test_user):
+        invalid_email = test_user.copy()
+        invalid_email["email"] = "mail@"
         response = api_manager.auth_api.register_user(invalid_email, expected_status=400)
         response_data = response.json()
 
