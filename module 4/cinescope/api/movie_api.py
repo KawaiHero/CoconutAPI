@@ -22,10 +22,10 @@ class MovieAPI(CustomRequester):
             expected_status=expected_status
         )
 
-    def get_movie_by_genre(self, genre_id, expected_status = 200):
+    def get_movie_by_filter(self, filter, expected_status = 200):
         return self.send_request(
             method="GET",
-            endpoint=f"movies?genreId={genre_id}",
+            endpoint=f"movies?{filter}",
             expected_status=expected_status
         )
 
