@@ -6,25 +6,23 @@ import requests
 from cinescope.api.api_manager import ApiManager
 from cinescope.constants import Roles
 from cinescope.entities.user import User
+from cinescope.models.base_models import TestUser, RegisterUserResponse
 from cinescope.resources.user_creds import SuperAdminCreds
 from utils.data_generator import DataGenerator
 
 faker = Faker()
 
-@pytest.fixture(scope="session")
-def test_user():
-
-    random_email = DataGenerator.generate_random_email()
-    random_name = DataGenerator.generate_random_name()
+@pytest.fixture
+def test_user() -> TestUser:
     random_password = DataGenerator.generate_random_password()
 
-    return {
-        "email": random_email,
-        "fullName": random_name,
-        "password": random_password,
-        "passwordRepeat": random_password,
-        "roles": [Roles.USER.value]
-    }
+    return TestUser(
+        email=DataGenerator.generate_random_email(),
+        fullName=DataGenerator.generate_random_name(),
+        password=random_password,
+        passwordRepeat=random_password,
+        roles=[Roles.USER.value]
+    )
 
 @pytest.fixture(scope="session")
 def session():
@@ -36,13 +34,13 @@ def session():
 def api_manager(session):
      return ApiManager(session)
 
-@pytest.fixture(scope="session")
+@pytest.fixture
 def registered_user(api_manager: ApiManager, test_user):
-    response = api_manager.auth_api.register_user(test_user)
-    response_data = response.json()
-    registered_user = test_user.copy()
-    registered_user["id"] = response_data["id"]
-    return registered_user
+    response = api_manager.auth_api.register_user(user_data=test_user)
+    register_user_response = RegisterUserResponse(**response.json())
+
+    assert register_user_response.email == test_user.email, "ID не совпадает"
+    return test_user
 
 @pytest.fixture(scope="session")
 def test_movie():
@@ -103,11 +101,9 @@ def super_admin(user_session):
 
 @pytest.fixture(scope="function")
 def creation_user_data(test_user):
-    updated_data = test_user.copy()
-    updated_data.update({
-        "verified": True,
-        "banned": False
-    })
+    updated_data = test_user
+    updated_data.verified = True
+    updated_data.banned = False
     return updated_data
 
 @pytest.fixture
@@ -115,8 +111,8 @@ def common_user(user_session, super_admin, creation_user_data):
     new_session = user_session()
 
     common_user = User(
-        creation_user_data['email'],
-        creation_user_data['password'],
+        creation_user_data.email,
+        creation_user_data.password,
         [Roles.USER.value],
         new_session)
 
