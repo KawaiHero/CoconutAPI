@@ -1,5 +1,7 @@
 import pytest
-from cinescope.constants import admin_creds
+from cinescope.constants import admin_creds, test_cases_movie
+from cinescope.models.base_models import TestMovieResponse, TestMovieNegativeResponse
+from cinescope.utils.payload_mutate import mutate_payload_movie
 
 
 class TestMovieAPI:
@@ -14,32 +16,23 @@ class TestMovieAPI:
         assert "page" in response_data, "отсутствует page в ответе"
 
 
-    def test_post_movie(self, super_admin, test_movie):
-
-        response = super_admin.api.movie_api.post_movie(test_movie)
-        response_data = response.json()
+    def test_post_movie(self, super_admin, test_movie_p):
+        response = super_admin.api.movie_api.post_movie(test_movie_p)
+        response_data = TestMovieResponse(**response.json()).model_dump()
 
         assert "id" in response_data, "Oтсутствует ID в ответе"
         assert "name" in response_data, "Oтсутствует Name в ответе"
 
-    @pytest.mark.slow
-    def test_post_movie_by_user(self, common_user, test_movie):
 
-        response = common_user.api.movie_api.post_movie(test_movie, expected_status=403)
-        response_data = response.json()
+    def test_get_movie_by_id(self, super_admin, test_movie_p):
 
-        assert "error" in response_data, "Oтсутствует error в ответе"
-        assert "statusCode" in response_data, "Oтсутствует statusCode в ответе"
-
-    def test_get_movie_by_id(self, super_admin, test_movie):
-
-        response = super_admin.api.movie_api.post_movie(test_movie)
-        movie_id = response.json()["id"]
-        movie_response = super_admin.api.movie_api.get_movie_by_id(movie_id)
-        movie_response_data = movie_response.json()
+        response = super_admin.api.movie_api.post_movie(test_movie_p)
+        movie_id = TestMovieResponse(**response.json())
+        movie_response = super_admin.api.movie_api.get_movie_by_id(movie_id.id)
+        movie_response_data = TestMovieResponse(**movie_response.json()).model_dump()
         assert "id" in movie_response_data, "Oтсутствует ID в ответе"
         assert "name" in movie_response_data, "Oтсутствует Name в ответе"
-        assert movie_response_data["name"] == test_movie["name"], "name не совпадает"
+        assert movie_response_data["name"] == test_movie_p.name, "name не совпадает"
 
     @pytest.mark.ui
     @pytest.mark.parametrize("genre_id", [1, 2, 3])
@@ -78,7 +71,7 @@ class TestMovieAPI:
         role = request.getfixturevalue(role_fixture)
 
         response = super_admin.api.movie_api.post_movie(test_movie)
-        movie_id = response.json()["id"]
+        movie_id = TestMovieResponse(**response.json()).id
 
         del_response = role.api.movie_api.delete_movie(movie_id, expected_status=expected_result)
         assert del_response.status_code == expected_result
@@ -86,32 +79,48 @@ class TestMovieAPI:
 
 
     @pytest.mark.slow
-    def test_patch_movie(self, super_admin, wrong_movie, test_movie):
+    def test_patch_movie(self, super_admin, wrong_movie, test_movie_p):
         super_admin.api.auth_api.authenticate(admin_creds)
         response = super_admin.api.movie_api.post_movie(wrong_movie)
-        response_data = response.json()
-        movie_id = response.json()["id"]
+        response_data = TestMovieResponse(**response.json())
+        movie_id = TestMovieResponse(**response.json()).id
 
-        patch_response = super_admin.api.movie_api.patch_movie(movie_id, test_movie)
-        patch_response_data = patch_response.json()
-        assert response_data["name"] != patch_response_data["name"], "Название фильма не изменилось"
+        patch_response = super_admin.api.movie_api.patch_movie(movie_id, test_movie_p)
+        patch_response_data = TestMovieResponse(**patch_response.json())
+        assert response_data.name != patch_response_data.name, "Название фильма не изменилось"
 
-    @pytest.mark.db
+    @pytest.mark.negative
     def test_wrong_id(self, super_admin, movie_id = 99999):
         movie_response = super_admin.api.movie_api.get_movie_by_id(movie_id, expected_status=404)
-        movie_response_data = movie_response.json()
+        movie_response_data = TestMovieNegativeResponse(**movie_response.json()).model_dump()
         assert "message" in movie_response_data, "Oтсутствует message в ответе"
         assert "error" in movie_response_data, "Oтсутствует error в ответе"
         assert "statusCode" in movie_response_data, "Oтсутствует statusCode в ответе"
 
-    @pytest.mark.db
+    @pytest.mark.negative
     def test_post_empty(self, super_admin):
         empty_movie = {}
-        super_admin.api.auth_api.authenticate(admin_creds)
         response = super_admin.api.movie_api.post_movie(empty_movie, expected_status=400)
-        response_data = response.json()
+        response_data = TestMovieNegativeResponse(**response.json()).model_dump()
 
         assert "message" in response_data, "Oтсутствует message в ответе"
         assert "error" in response_data, "Oтсутствует error в ответе"
         assert "statusCode" in response_data, "Oтсутствует statusCode в ответе"
 
+    @pytest.mark.negative
+    def test_post_movie_by_user(self, common_user, test_movie):
+
+        response = common_user.api.movie_api.post_movie(test_movie, expected_status=403)
+        response_data = TestMovieNegativeResponse(**response.json()).model_dump()
+
+        assert "error" in response_data, "Oтсутствует error в ответе"
+        assert "statusCode" in response_data, "Oтсутствует statusCode в ответе"
+
+    @pytest.mark.negative
+    @pytest.mark.parametrize("case, field, value", test_cases_movie)
+    def test_register_with_invalid_data(self, super_admin, test_movie_p, case, field, value):
+        invalid_movie = mutate_payload_movie(test_movie_p, field, value)
+        response = super_admin.api.movie_api.post_movie(invalid_movie, expected_status=400)
+        response_data = TestMovieNegativeResponse(**response.json()).model_dump()
+        assert "error" in response_data, "Oтсутствует error в ответе"
+        assert "statusCode" in response_data, "Oтсутствует statusCode в ответе"

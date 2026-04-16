@@ -1,14 +1,16 @@
-
 from faker import Faker
 import pytest
 import requests
 
 from cinescope.api.api_manager import ApiManager
-from cinescope.constants import Roles
+from cinescope.constants import Roles, Location
+from cinescope.db_requester.db_helpers import DBHelper, DBHelperMovie
 from cinescope.entities.user import User
-from cinescope.models.base_models import TestUser, RegisterUserResponse
+from cinescope.models.base_models import TestUser, RegisterUserResponse, TestMovie
 from cinescope.resources.user_creds import SuperAdminCreds
 from utils.data_generator import DataGenerator
+from sqlalchemy.orm import Session
+from db_requester.db_client import get_db_session
 
 faker = Faker()
 
@@ -56,6 +58,19 @@ def test_movie():
         "published": True,
         "genreId": 1
 }
+
+@pytest.fixture(scope="session")
+def test_movie_p() -> TestMovie:
+    return TestMovie(
+        name=DataGenerator.generate_movie_name(),
+        imageUrl=faker.image_url(),
+        price=faker.pyint(min_value=10, max_value=1000),
+        description=DataGenerator.generate_movie_description(),
+        location=Location.MSK.value,
+        published=True,
+        genreId=faker.pyint(min_value=1, max_value=10)
+    )
+
 
 @pytest.fixture(scope="session")
 def wrong_movie():
@@ -132,3 +147,40 @@ def admin(user_session):
 
     admin.api.auth_api.authenticate(admin.creds)
     return admin
+
+@pytest.fixture(scope="module")
+def db_session() -> Session:
+
+    db_session = get_db_session()
+    yield db_session
+    db_session.close()
+
+@pytest.fixture(scope="function")
+def db_helper(db_session) -> DBHelper:
+
+    db_helper = DBHelper(db_session)
+    return db_helper
+
+@pytest.fixture(scope="function")
+def db_helper_movie(db_session) -> DBHelperMovie:
+
+    db_helper_mov = DBHelperMovie(db_session)
+    return db_helper_mov
+
+@pytest.fixture(scope="function")
+def created_test_user(db_helper):
+
+    user = db_helper.create_test_user(DataGenerator.generate_user_data())
+    yield user
+    # Cleanup после теста
+    if db_helper.get_user_by_id(user.id):
+        db_helper.delete_user(user)
+
+@pytest.fixture(scope="function")
+def created_test_movie(db_helper_movie):
+
+    movie = db_helper_movie.create_test_movie(DataGenerator.generate_movie_data())
+    yield movie
+    # Cleanup после теста
+    if db_helper_movie.get_movie_by_id(movie.id):
+        db_helper_movie.delete_movie(movie)

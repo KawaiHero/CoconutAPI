@@ -22,6 +22,7 @@ class TestAuthAPI:
         assert "accessToken" in response_data, "Токен доступа отсутствует в ответе"
         assert response_data["user"]["email"] == registered_user.email, "Email не совпадает"
 
+    @pytest.mark.negative
     @pytest.mark.parametrize("case, field, value", test_cases)
     def test_register_with_invalid_data(self, api_manager: ApiManager , test_user, case, field, value):
         invalid_user = mutate_payload(test_user, field, value)

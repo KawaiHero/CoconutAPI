@@ -9,5 +9,5 @@ class SuperAdminCreds:
 
 
 class AdminCreds:
-    USERNAME = 'api1@gmail.com'
-    PASSWORD = 'asdqwe123Q'
+    USERNAME = os.getenv('ADMIN_USERNAME')
+    PASSWORD = os.getenv('ADMIN_PASSWORD')

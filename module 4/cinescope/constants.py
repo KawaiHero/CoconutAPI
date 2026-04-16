@@ -9,6 +9,11 @@ class Roles(Enum):
     ADMIN = "ADMIN"
     SUPER_ADMIN = "SUPER_ADMIN"
 
+class Location(Enum):
+    SPB = "SPB"
+    MSK = "MSK"
+
+
 
 BASE_URL = "https://auth.dev-cinescope.coconutqa.ru/"
 MOVIE_URL = 'https://api.dev-cinescope.coconutqa.ru/'
@@ -27,5 +32,10 @@ test_cases = [
     ("missing_email", "email", None),
     ("invalid_email_format", "email", "abc"),
     ("short_password", "password", "123"),
+]
+
+test_cases_movie = [
+    ("missing_name", "name", None),
+    ("missing_price", "price", None),
 ]
 
