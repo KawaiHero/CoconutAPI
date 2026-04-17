@@ -10,4 +10,6 @@ logs/
 class
 functions
 module 2 python base
+allure-report
+allure-results
 

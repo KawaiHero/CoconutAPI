@@ -8,9 +8,9 @@ from cinescope.db_requester.db_helpers import DBHelper, DBHelperMovie
 from cinescope.entities.user import User
 from cinescope.models.base_models import TestUser, RegisterUserResponse, TestMovie
 from cinescope.resources.user_creds import SuperAdminCreds
-from utils.data_generator import DataGenerator
+from cinescope.utils.data_generator import DataGenerator
 from sqlalchemy.orm import Session
-from db_requester.db_client import get_db_session
+from cinescope.db_requester.db_client import get_db_session
 
 faker = Faker()
 
@@ -59,7 +59,7 @@ def test_movie():
         "genreId": 1
 }
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="function")
 def test_movie_p() -> TestMovie:
     return TestMovie(
         name=DataGenerator.generate_movie_name(),
