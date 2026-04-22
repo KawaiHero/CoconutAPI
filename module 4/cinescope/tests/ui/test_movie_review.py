@@ -9,7 +9,7 @@ from cinescope.ui_pages.movie_page import MoviePage
 from cinescope.utils.data_generator import DataGenerator
 
 @allure.epic("Тестирование UI")
-@allure.feature("Тестирование Страницы Movie")
+@allure.feature("MoviesReviews")
 @pytest.mark.ui
 class TestMovie:
     @allure.title("Написание отзыва к фильму")
@@ -35,6 +35,7 @@ class TestMovie:
 
             #movie_page.pick_value4()
             movie_page.send_review(review)
+            movie_page.make_screenshot_and_attach_to_allure()
 
             time.sleep(5)
             browser.close()
